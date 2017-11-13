@@ -72,7 +72,7 @@ pub fn render_to_canvas(canvas: &mut WindowCanvas, fonts: &Fonts, model: &Model)
         let track_name_dim = track_name_tex.query();
 
         canvas.copy(&track_name_tex, None, Some(
-            Rect::new(128, 32, track_name_dim.width, track_name_dim.height)))?;
+            Rect::new(140, 32, track_name_dim.width, track_name_dim.height)))?;
     }
 
     // render track artist:
@@ -85,7 +85,7 @@ pub fn render_to_canvas(canvas: &mut WindowCanvas, fonts: &Fonts, model: &Model)
         let track_artist_dim = track_artist_tex.query();
 
         canvas.copy(&track_artist_tex, None, Some(
-            Rect::new(128, 64, track_artist_dim.width, track_artist_dim.height)))?;
+            Rect::new(140, 64, track_artist_dim.width, track_artist_dim.height)))?;
     }
 
     // render buttons:
