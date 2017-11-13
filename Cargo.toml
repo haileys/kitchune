@@ -1,0 +1,7 @@
+[package]
+name = "kitchune"
+authors = ["Charlie Somerville <charlie@charlie.bz>"]
+version = "0.0.0"
+
+[dependencies]
+sdl2 = { version = "0.31.0", features = ["ttf"] }
