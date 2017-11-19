@@ -1,8 +1,11 @@
+use std::convert::From;
+use std::default::Default;
+
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
-use sdl2::render::{WindowCanvas, TextureValueError};
+use sdl2::render::{Texture, TextureCreator, WindowCanvas, TextureValueError};
+use sdl2::video::WindowContext;
 use sdl2::ttf::{Font, FontError};
-use std::convert::From;
 
 pub const WIDTH: u32 = 480;
 pub const HEIGHT: u32 = 320;
@@ -19,11 +22,22 @@ pub struct Fonts<'a> {
     pub material_128: Font<'a, 'static>,
 }
 
-pub struct Model<'a> {
-    pub track_name: &'a str,
-    pub track_artist: &'a str,
+pub struct Model {
+    pub track_name: String,
+    pub track_artist: String,
     pub playing: bool,
     pub saved: bool,
+}
+
+impl Default for Model {
+    fn default() -> Self {
+        Model {
+            track_name: String::new(),
+            track_artist: String::new(),
+            playing: false,
+            saved: false,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -51,6 +65,23 @@ impl From<TextureValueError> for RenderError {
     }
 }
 
+fn render_text<'a>(texture_creator: &'a TextureCreator<WindowContext>, font: &Font, text: &str) -> Result<Option<Texture<'a>>, RenderError> {
+    let surface = font.render(&text)
+        .blended(Color::RGB(255, 255, 255));
+
+    match surface {
+        Err(FontError::SdlError(ref s)) if s == "Text has zero width" => {
+            Ok(None)
+        }
+        Err(e) => {
+            Err(e.into())
+        }
+        Ok(surface) => {
+            texture_creator.create_texture_from_surface(surface).map(Some).map_err(|e| e.into())
+        }
+    }
+}
+
 pub fn render_to_canvas(canvas: &mut WindowCanvas, fonts: &Fonts, model: &Model)
     -> Result<(), RenderError>
 {
@@ -63,12 +94,7 @@ pub fn render_to_canvas(canvas: &mut WindowCanvas, fonts: &Fonts, model: &Model)
     canvas.fill_rect(Rect::new(16, 16, 96, 96))?;
 
     // render track name:
-
-    {
-        let track_name_tex = texture_creator.create_texture_from_surface(
-            fonts.opensans_24.render(model.track_name)
-                .blended(Color::RGB(255, 255, 255))?)?;
-
+    if let Some(track_name_tex) = render_text(&texture_creator, &fonts.opensans_24, &model.track_name)? {
         let track_name_dim = track_name_tex.query();
 
         canvas.copy(&track_name_tex, None, Some(
@@ -76,12 +102,7 @@ pub fn render_to_canvas(canvas: &mut WindowCanvas, fonts: &Fonts, model: &Model)
     }
 
     // render track artist:
-
-    {
-        let track_artist_tex = texture_creator.create_texture_from_surface(
-            fonts.opensans_18.render(model.track_artist)
-                .blended(Color::RGB(255, 255, 255))?)?;
-
+    if let Some(track_artist_tex) = render_text(&texture_creator, &fonts.opensans_18, &model.track_artist)? {
         let track_artist_dim = track_artist_tex.query();
 
         canvas.copy(&track_artist_tex, None, Some(

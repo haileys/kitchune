@@ -4,4 +4,11 @@ authors = ["Charlie Somerville <charlie@charlie.bz>"]
 version = "0.0.0"
 
 [dependencies]
+crossbeam = "0.3"
+dotenv = "0.10"
+reqwest = "0.8"
 sdl2 = { version = "0.31.0", features = ["ttf"] }
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+url = "1.6"
