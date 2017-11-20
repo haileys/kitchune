@@ -11,7 +11,6 @@ extern crate url;
 mod spotify;
 mod ui;
 
-use std::default::Default;
 use std::env;
 use std::time::Duration;
 use std::sync::mpsc::{sync_channel, Receiver, RecvTimeoutError};
@@ -19,7 +18,9 @@ use std::sync::mpsc::{sync_channel, Receiver, RecvTimeoutError};
 use sdl2::EventSubsystem;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+use sdl2::rect::Point;
 use spotify::Spotify;
+use ui::{Action, Ui};
 
 struct SpotifyModelUpdate(ui::Model);
 
@@ -94,7 +95,7 @@ fn main() {
 
     let video = sdl.video().unwrap();
 
-    let window = video.window("Kitchune", ui::WIDTH, ui::HEIGHT)
+    let window = video.window("Kitchune", ui::WIDTH as u32, ui::HEIGHT as u32)
         .opengl()
         .position_centered()
         .build()
@@ -112,8 +113,8 @@ fn main() {
         material_128: ttf.load_font("assets/fonts/MaterialIcons-Regular.ttf", 128).unwrap(),
     };
 
-    ui::render_to_canvas(&mut canvas, &fonts, &Default::default())
-        .expect("render_to_canvas");
+    let mut ui = Ui::new(&fonts);
+    ui.render(&mut canvas).expect("Ui::render");
 
     let (kill_spotify_tx, kill_spotify_rx) = sync_channel(0);
 
@@ -131,10 +132,24 @@ fn main() {
                     kill_spotify_tx.send(()).unwrap();
                     break;
                 }
+                Event::MouseButtonDown { x, y, .. } => {
+                    match ui.click(Point::new(x, y)) {
+                        Some(Action::Save) => {
+                            println!("save!");
+                        }
+                        Some(Action::PlayPause) => {
+                            println!("play/pause!");
+                        }
+                        Some(Action::SkipNext) => {
+                            println!("skip next");
+                        }
+                        None => {}
+                    }
+                }
                 ref ev if ev.is_user_event() => {
                     if let Some(SpotifyModelUpdate(model)) = ev.as_user_event_type() {
-                        ui::render_to_canvas(&mut canvas, &fonts, &model)
-                            .expect("render_to_canvas");
+                        ui.update_data(&model);
+                        ui.render(&mut canvas).expect("Ui::render");
                     }
                 }
                 _ => {}
